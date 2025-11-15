@@ -410,6 +410,72 @@ public class InventoryService {
                                 .toList();
         }
 
+        @Transactional(readOnly = true)
+        public List<StationSalesStatsResponseDto> getStationSalesStats(Long organizationId) {
+                // Get all sale transactions for the organization
+                List<InventoryTransaction> saleTransactions = inventoryTransactionRepository
+                                .findSaleTransactionsByOrganizationId(organizationId);
+
+                // Group transactions by station
+                Map<Long, List<InventoryTransaction>> transactionsByStation = saleTransactions.stream()
+                                .filter(t -> t.getBarStationId() != null)
+                                .collect(Collectors.groupingBy(InventoryTransaction::getBarStationId));
+
+                // Get all unique station IDs
+                Set<Long> stationIds = transactionsByStation.keySet();
+
+                // Fetch all stations at once
+                Map<Long, BarStation> stationMap = barStationRepository.findAllById(new ArrayList<>(stationIds))
+                                .stream()
+                                .collect(Collectors.toMap(BarStation::getId, station -> station));
+
+                // Calculate statistics for each station
+                return transactionsByStation.entrySet().stream()
+                                .map(entry -> {
+                                        Long stationId = entry.getKey();
+                                        List<InventoryTransaction> stationTransactions = entry.getValue();
+                                        BarStation station = stationMap.get(stationId);
+
+                                        // Count unique sales (by referenceId)
+                                        long salesCount = stationTransactions.stream()
+                                                        .filter(t -> t.getReferenceId() != null)
+                                                        .map(InventoryTransaction::getReferenceId)
+                                                        .distinct()
+                                                        .count();
+
+                                        // Calculate total revenue by getting all products and their prices
+                                        BigDecimal totalRevenue = stationTransactions.stream()
+                                                        .map(transaction -> {
+                                                                // Get inventory to find product
+                                                                return inventoryRepository
+                                                                                .findById(transaction.getInventoryId())
+                                                                                .flatMap(inventory -> productRepository
+                                                                                                .findById(inventory
+                                                                                                                .getProductId()))
+                                                                                .map(product -> {
+                                                                                        // Calculate revenue for this
+                                                                                        // transaction
+                                                                                        BigDecimal quantitySold = transaction
+                                                                                                        .getQuantityChange()
+                                                                                                        .abs();
+                                                                                        return product.getBasePrice()
+                                                                                                        .multiply(quantitySold);
+                                                                                })
+                                                                                .orElse(BigDecimal.ZERO);
+                                                        })
+                                                        .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                                        return new StationSalesStatsResponseDto(
+                                                        stationId,
+                                                        station != null ? station.getName() : null,
+                                                        salesCount,
+                                                        totalRevenue);
+                                })
+                                .sorted((a, b) -> Long.compare(b.salesCount(), a.salesCount())) // Sort by sales count
+                                                                                                // desc
+                                .toList();
+        }
+
         private void createTransaction(Inventory inventory, String type, BigDecimal quantityChange,
                         BigDecimal quantityBefore, BigDecimal quantityAfter,
                         BigDecimal priceBefore, BigDecimal priceAfter,

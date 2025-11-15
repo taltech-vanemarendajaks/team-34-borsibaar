@@ -74,4 +74,10 @@ public class InventoryController {
         User user = SecurityUtils.getCurrentUser();
         return inventoryService.getUserSalesStats(user.getOrganizationId());
     }
+
+    @GetMapping("/station-sales-stats")
+    public List<StationSalesStatsResponseDto> getStationSalesStats() {
+        User user = SecurityUtils.getCurrentUser();
+        return inventoryService.getStationSalesStats(user.getOrganizationId());
+    }
 }

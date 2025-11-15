@@ -23,11 +23,19 @@ interface UserSalesStats {
   barStationName: string | null;
 }
 
+interface StationSalesStats {
+  barStationId: number;
+  barStationName: string | null;
+  salesCount: number;
+  totalRevenue: number;
+}
+
 export default function Dashboard() {
   const [me, setMe] = useState<CurrentUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [orgName, setOrgName] = useState("-");
   const [salesStats, setSalesStats] = useState<UserSalesStats[]>([]);
+  const [stationStats, setStationStats] = useState<StationSalesStats[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const fetchAll = useCallback(async () => {
@@ -70,6 +78,19 @@ export default function Dashboard() {
           if (statsRes.ok) {
             const statsJson = await statsRes.json();
             if (Array.isArray(statsJson)) setSalesStats(statsJson);
+          }
+        } catch {
+          // ignore stats errors silently
+        }
+
+        try {
+          const stationStatsRes = await fetch(
+            `/api/backend/inventory/station-sales-stats`,
+            { cache: "no-store" }
+          );
+          if (stationStatsRes.ok) {
+            const stationStatsJson = await stationStatsRes.json();
+            if (Array.isArray(stationStatsJson)) setStationStats(stationStatsJson);
           }
         } catch {
           // ignore stats errors silently
@@ -167,10 +188,55 @@ export default function Dashboard() {
             </a>
           </div>
 
+          {stationStats.length > 0 && (
+            <div className="rounded-lg bg-card p-6 shadow mb-6">
+              <h2 className="text-xl font-semibold text-card-foreground mb-4">
+                Station Leaderboard
+              </h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-border">
+                      <th className="text-left py-2 text-muted-foreground font-medium">
+                        Station
+                      </th>
+                      <th className="text-left py-2 text-muted-foreground font-medium">
+                        Sales Count
+                      </th>
+                      <th className="text-left py-2 text-muted-foreground font-medium">
+                        Total Revenue
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {stationStats.map((stat) => (
+                      <tr
+                        key={stat.barStationId}
+                        className="border-b border-border last:border-0"
+                      >
+                        <td className="py-3">
+                          <div className="font-medium text-card-foreground">
+                            {stat.barStationName || `Station ${stat.barStationId}`}
+                          </div>
+                        </td>
+                        <td className="py-3 text-card-foreground font-medium">
+                          {stat.salesCount}
+                        </td>
+                        <td className="py-3 text-card-foreground font-medium">
+                          €{stat.totalRevenue.toFixed(2)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
           {salesStats.length > 0 && (
             <div className="rounded-lg bg-card p-6 shadow">
               <h2 className="text-xl font-semibold text-card-foreground mb-4">
-                Sales Performance
+                Sales Performance by User
               </h2>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
