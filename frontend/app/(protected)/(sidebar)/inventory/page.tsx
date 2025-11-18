@@ -430,7 +430,7 @@ export default function Inventory() {
 
   return (
     <div className="min-h-screen bg-background p-4">
-        <div className="rounded-lg bg-card p-6 shadow-sm mb-6 border-1 border-[color-mix(in oklab, var(--ring) 50%, transparent)]">
+        <div className="rounded-lg bg-card p-6 shadow-sm border-1 border-[color-mix(in oklab, var(--ring) 50%, transparent)]">
           <div className="flex items-center justify-between mb-6">
             <div className="flex items-center gap-3">
               <Package className="w-8 h-8 text-blue-600" />

@@ -231,7 +231,7 @@ export default function POSManagement() {
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 sm:p-6 w-full">
+    <div className="min-h-screen bg-background p-4 w-full">
         <StationManagementHeader
           isAdmin={isAdmin}
           isCreateDialogOpen={isCreateDialogOpen}
