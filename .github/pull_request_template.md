@@ -10,15 +10,15 @@
 
 ## How was this tested
 <!-- Describe how you verified the change -->
-- [ ] Manually tested
-- [ ] Automated tests
-- [ ] Not tested (explain why)
+- Manually tested
+- Automated tests
+- Not tested (explain why)
 
 
 ## Breaking changes
 <!-- Does this PR introduce breaking changes? -->
-- [ ] Yes (describe below)
-- [ ] No
+- Yes (describe below)
+- No
 
 If yes, describe:
 - 
