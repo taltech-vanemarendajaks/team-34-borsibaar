@@ -127,7 +127,7 @@ public class InventoryService {
                 .findByOrganizationIdAndProductId(organizationId, request.productId())
                 .orElseGet(() -> {
                     Inventory newInv = new Inventory();
-                    newInv.setOrganizationId(organizationId);
+                   
                     newInv.setProduct(product);
                     newInv.setQuantity(BigDecimal.ZERO);
                     newInv.setAdjustedPrice(product.getBasePrice());
