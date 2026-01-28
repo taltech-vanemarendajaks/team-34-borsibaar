@@ -8,6 +8,8 @@
 
 ### Pull Requests
 - https://github.com/taltech-vanemarendajaks/team-34-borsibaar/pull/21 
+- https://github.com/taltech-vanemarendajaks/team-34-borsibaar/pull/20
+- https://github.com/taltech-vanemarendajaks/team-34-borsibaar/pull/22
 
 ### Team member work
 
@@ -19,3 +21,11 @@ I used basic merge, didn't think it was necessary to squash my commits because I
 - **Problems**
 Didn't encounter any problems in the workflow
 
+#### Robert
+- **What I did:**
+I created a Definition of Done, describing when a given task may be considered completed, and a team workflow section in the TEAM.MD file.
+Also worked on an isuue to create a proper error message when entering duplicate category name in Inventori page.
+- **Merge strategies and why**
+Used basic merge, this preserves the full context of the pull request.
+- **Problems**
+Didn't encounter any serious problems
