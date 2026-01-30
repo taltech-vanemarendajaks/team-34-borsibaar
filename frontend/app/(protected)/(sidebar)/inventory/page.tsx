@@ -299,7 +299,7 @@ export default function Inventory() {
   };
 
   const handleAddCategory = async () => {
-	setCategoryError(null); // Clear previous errors
+    setCategoryError(null);
 	
     try {
       const categoryResponse = await fetch("/api/backend/categories", {
@@ -311,15 +311,12 @@ export default function Inventory() {
         }),
       });
 
-		if (!categoryResponse.ok) {
-		  const error = await categoryResponse.json();
-		  console.log("Full error object:", error); // Debug line
-		  
-		  // ProblemDetail format has the message in 'detail' field
-		  const errorMessage = error.detail || error.message || error.title || "Failed to create category";
-		  setCategoryError(errorMessage);
-		  return;
-		}
+      if (!categoryResponse.ok) {
+        const error = await categoryResponse.json();        
+        const errorMessage = error.detail || error.message || error.title || "Failed to create category";
+        setCategoryError(errorMessage);
+        return;
+      }
 
       setShowCreateCategoryModal(false);
       setCategoryForm({
@@ -329,8 +326,7 @@ export default function Inventory() {
       await fetchCategories();
     } catch (err) {
       if (err instanceof Error) {
-        //alert(err.message);
-		setCategoryError(err.message);	// Added
+        setCategoryError(err.message);
       } else {
         alert("An unknown error occurred");
       }
@@ -372,7 +368,7 @@ export default function Inventory() {
     setFormData({ quantity: "", notes: "", referenceId: "" });
     setTransactionHistory([]);
     setLoadingHistory(false);
-	setCategoryError(null);
+    setCategoryError(null);
   };
 
   // @ts-expect-error: types aren't imported currently from backend
@@ -445,13 +441,13 @@ export default function Inventory() {
             <div className="flex items-center gap-3">
               <Package className="w-8 h-8 text-blue-600" />
               <h1 className="text-3xl font-bold text-gray-100">
-                Inventory Management Point
+                Inventory Management
               </h1>
             </div>
             <div className="flex items-center gap-4">
 				<Button
 				  onClick={() => setShowCreateCategoryModal(true)}
-				  className="flex items-center gap-2 px-4 py-2 bg-yellow-400 text-black rounded-lg hover:bg-yellow-500 transition font-medium"
+				  className="flex items-center gap-2 px-4 py-2 bg-blue-100 text-black rounded-lg hover:bg-blue-100 transition font-medium"
 				>
                 <ListPlus className="w-4 h-4" />
                 <span className="flex">New Category</span>
@@ -642,7 +638,7 @@ export default function Inventory() {
                   setProductForm({ ...productForm, name: e.target.value })
                 }
                 className="w-full px-3 py-2 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Enter product name right here!"
+                placeholder="Enter product name"
                 required
               />
             </div>
@@ -845,15 +841,15 @@ export default function Inventory() {
           <DialogHeader>
             <DialogTitle>Create New Category</DialogTitle>
      
-			{/* ERROR DISPLAY */}
-			{categoryError && (
-			<div className="mt-2 p-3 bg-red-950 border border-red-800 rounded-lg flex items-center gap-2 text-red-50 text-sm">
-			  <AlertCircle className="w-4 h-4 flex-shrink-0" />
-			  <span>{categoryError}</span>
-			</div>
-			)}	 
+            {/* ERROR DISPLAY */}
+            {categoryError && (
+              <div className="mt-2 p-3 bg-red-950 border border-red-800 rounded-lg flex items-center gap-2 text-red-50 text-sm">
+                <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                <span>{categoryError}</span>
+              </div>
+            )}	 
 			
-			<div>
+            <div>
               <label className="block text-sm font-medium text-gray-300 mb-1">
                 Category Name *
               </label>
