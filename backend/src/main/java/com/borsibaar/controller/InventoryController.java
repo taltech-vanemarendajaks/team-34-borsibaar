@@ -44,9 +44,7 @@ public class InventoryController {
     @ResponseStatus(HttpStatus.CREATED)
     public InventoryResponseDto addStock(@RequestBody @Valid AddStockRequestDto request) {
         User user = SecurityUtils.getCurrentUser();
-        System.out.println("Received request: " + request); // DEBUG
-        System.out.println("ProductId: " + request.productId()); // DEBUG
-        System.out.println("Quantity: " + request.quantity()); // DEBUG
+        
 
         return inventoryService.addStock(request, user.getId(), user.getOrganizationId());
     }

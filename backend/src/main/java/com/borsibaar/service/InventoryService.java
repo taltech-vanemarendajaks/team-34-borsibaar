@@ -119,6 +119,13 @@ public class InventoryService {
 
     @Transactional
     public InventoryResponseDto addStock(AddStockRequestDto request, UUID userId, Long organizationId) {
+
+        if (request.quantity() == null || request.quantity().compareTo(BigDecimal.ZERO) <= 0) {
+    throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Quantity must be greater than zero");
+}
+
         Long productId = request.productId();
         Product product = getOrganizationProduct(organizationId, productId);
 
@@ -127,7 +134,7 @@ public class InventoryService {
                 .findByOrganizationIdAndProductId(organizationId, request.productId())
                 .orElseGet(() -> {
                     Inventory newInv = new Inventory();
-                    newInv.setOrganizationId(organizationId);
+                    
                     newInv.setProduct(product);
                     newInv.setQuantity(BigDecimal.ZERO);
                     newInv.setAdjustedPrice(product.getBasePrice());
@@ -220,6 +227,12 @@ public class InventoryService {
 
         BigDecimal oldQuantity = inventory.getQuantity();
         BigDecimal quantityChange = request.newQuantity().subtract(oldQuantity);
+
+        if (request.newQuantity().compareTo(BigDecimal.ZERO) < 0) {
+        throw new ResponseStatusException(
+            HttpStatus.BAD_REQUEST,
+            "Inventory quantity cannot be negative");
+}
 
         inventory.setQuantity(request.newQuantity());
         inventory.setUpdatedAt(OffsetDateTime.now());
@@ -420,23 +433,49 @@ public class InventoryService {
     }
 
     private void createTransaction(Inventory inventory, String type, BigDecimal quantityChange,
-                                   BigDecimal quantityBefore, BigDecimal quantityAfter,
-                                   BigDecimal priceBefore, BigDecimal priceAfter,
-                                   String referenceId, String notes, UUID userId) {
-        InventoryTransaction transaction = new InventoryTransaction();
-        transaction.setInventory(inventory);
-        transaction.setTransactionType(type);
-        transaction.setQuantityChange(quantityChange);
-        transaction.setQuantityBefore(quantityBefore);
-        transaction.setQuantityAfter(quantityAfter);
-        transaction.setPriceBefore(priceBefore);
-        transaction.setPriceAfter(priceAfter);
-        transaction.setReferenceId(referenceId);
-        transaction.setNotes(notes);
-        transaction.setCreatedBy(userId);
-        transaction.setCreatedAt(OffsetDateTime.now());
-        inventoryTransactionRepository.save(transaction);
+                               BigDecimal quantityBefore, BigDecimal quantityAfter,
+                               BigDecimal priceBefore, BigDecimal priceAfter,
+                               String referenceId, String notes, UUID userId) {
+
+    // Null checks (prevent corrupt rows) Anneli
+    if (inventory == null) {
+        throw new IllegalStateException("Inventory must not be null");
     }
+    if (quantityChange == null || quantityBefore == null || quantityAfter == null) {
+        throw new IllegalStateException("Quantity values must not be null");
+    }
+    if (priceBefore == null || priceAfter == null) {
+        throw new IllegalStateException("Price values must not be null");
+    }
+
+    // Negative inventory protection Anneli
+    if (quantityAfter.compareTo(BigDecimal.ZERO) < 0) {
+        throw new IllegalStateException("Inventory quantity cannot be negative");
+    }
+
+    // Logical consistency check Anneli
+    if (quantityBefore.add(quantityChange).compareTo(quantityAfter) != 0) {
+        throw new IllegalStateException(
+                "quantityAfter must equal quantityBefore + quantityChange");
+    }
+
+    //  Safe to save Anneli
+    InventoryTransaction transaction = new InventoryTransaction();
+    transaction.setInventory(inventory);
+    transaction.setTransactionType(type);
+    transaction.setQuantityChange(quantityChange);
+    transaction.setQuantityBefore(quantityBefore);
+    transaction.setQuantityAfter(quantityAfter);
+    transaction.setPriceBefore(priceBefore);
+    transaction.setPriceAfter(priceAfter);
+    transaction.setReferenceId(referenceId);
+    transaction.setNotes(notes);
+    transaction.setCreatedBy(userId);
+    transaction.setCreatedAt(OffsetDateTime.now());
+
+    inventoryTransactionRepository.save(transaction);
+}
+
 
     private Product getOrganizationProduct(Long organizationId, Long productId) {
         // Verify product exists and belongs to organization
