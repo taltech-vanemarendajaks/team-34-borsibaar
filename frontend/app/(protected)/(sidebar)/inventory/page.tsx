@@ -12,6 +12,7 @@ import {
   User,
   ListPlus,
   Trash,
+  ArrowUpDown,
 } from "lucide-react";
 
 interface InventoryTransactionResponseDto {
@@ -54,6 +55,10 @@ export default function Inventory() {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showAddModal, setShowAddModal] = useState(false);
+  const [sortConfig, setSortConfig] = useState<{
+    key: string;
+    direction: 'asc' | 'desc';
+  } | null>(null);
   const [showRemoveModal, setShowRemoveModal] = useState(false);
   const [showAdjustModal, setShowAdjustModal] = useState(false);
   const [showHistoryModal, setShowHistoryModal] = useState(false);
@@ -126,7 +131,61 @@ export default function Inventory() {
       console.error("Error fetching categories:", err);
     }
   };
+  
+  const handleSort = (key: string) => {
+    setSortConfig((current) => {
+      if (current?.key === key) {
+        if (current.direction === 'asc') {
+          return { key, direction: 'desc' };
+        } else {
+          return null;
+        }
+      }
+      return { key, direction: 'asc' };
+    });
+  };
 
+  const getSortedInventory = () => {
+    if (!sortConfig) return filteredInventory;
+
+    return [...filteredInventory].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortConfig.key) {
+        case 'product':
+          aValue = a.productName.toLowerCase();
+          bValue = b.productName.toLowerCase();
+          break;
+        case 'price':
+          aValue = parseFloat(a.basePrice);
+          bValue = parseFloat(b.basePrice);
+          break;
+        case 'minPrice':
+          aValue = parseFloat(a.minPrice);
+          bValue = parseFloat(b.minPrice);
+          break;
+        case 'maxPrice':
+          aValue = parseFloat(a.maxPrice);
+          bValue = parseFloat(b.maxPrice);
+          break;
+        case 'quantity':
+          aValue = parseFloat(a.quantity);
+          bValue = parseFloat(b.quantity);
+          break;
+        case 'updated':
+          aValue = new Date(a.updatedAt).getTime();
+          bValue = new Date(b.updatedAt).getTime();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };  
+  
   const fetchTransactionHistory = async (productId: number) => {
     try {
       setLoadingHistory(true);
@@ -488,25 +547,61 @@ export default function Inventory() {
               <thead>
                 <tr className="border-b border-gray-400">
                   <th className="text-left py-3 px-4 font-semibold text-gray-300">
-                    Product
+                    <button
+                      onClick={() => handleSort('product')}
+                      className="flex items-center gap-2 hover:text-blue-400 transition"
+                    >
+                      Product
+                      <ArrowUpDown className="w-4 h-4" />
+                    </button>
                   </th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-300">
-                    Current Price
+                    <button
+                      onClick={() => handleSort('price')}
+                      className="flex items-center gap-2 hover:text-blue-400 transition"
+                    >
+                      Current Price
+                      <ArrowUpDown className="w-4 h-4" />
+                    </button>
                   </th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-300">
-                    Min Price
+                    <button
+                      onClick={() => handleSort('minPrice')}
+                      className="flex items-center gap-2 hover:text-blue-400 transition"
+                    >
+                      Min Price
+                      <ArrowUpDown className="w-4 h-4" />
+                    </button>
                   </th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-300">
-                    Max Price
+                    <button
+                      onClick={() => handleSort('maxPrice')}
+                      className="flex items-center gap-2 hover:text-blue-400 transition"
+                    >
+                      Max Price
+                      <ArrowUpDown className="w-4 h-4" />
+                    </button>
                   </th>
                   <th className="text-center py-3 px-4 font-semibold text-gray-300">
-                    Quantity
+                    <button
+                      onClick={() => handleSort('quantity')}
+                      className="flex items-center gap-2 hover:text-blue-400 transition"
+                    >
+                      Quantity
+                      <ArrowUpDown className="w-4 h-4" />
+                    </button>
                   </th>
                   <th className="text-center py-3 px-4 font-semibold text-gray-300">
                     Status
                   </th>
                   <th className="text-left py-3 px-4 font-semibold text-gray-300">
-                    Last Updated
+                    <button
+                      onClick={() => handleSort('updated')}
+                      className="flex items-center gap-2 hover:text-blue-400 transition"
+                    >
+                      Last Updated
+                      <ArrowUpDown className="w-4 h-4" />
+                    </button>
                   </th>
                   <th className="text-center py-3 px-4 font-semibold text-gray-300">
                     Actions
@@ -514,14 +609,14 @@ export default function Inventory() {
                 </tr>
               </thead>
               <tbody>
-                {filteredInventory.length === 0 ? (
+                {getSortedInventory().length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="text-center py-8 text-gray-400">
+                    <td colSpan={8} className="text-center py-8 text-gray-400">
                       No inventory items found
                     </td>
                   </tr>
                 ) : (
-                  filteredInventory.map((item) => {
+                  getSortedInventory().map((item) => {
                     // @ts-expect-error: types aren't imported currently from backend
                     const status = getStockStatus(item.quantity);
                     return (
