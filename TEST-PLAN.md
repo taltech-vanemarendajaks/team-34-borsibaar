@@ -32,6 +32,18 @@ The test scope covers all backend API endpoints and frontend features. Automated
 ### Test approach
 ### Test environment
 ### Entry and exit criteria
+Entry criteria:
+Feature implementation or bug fix is completed
+Code is committed and builds successfully
+Relevant unit and/or integration tests are written or updated
+Test environment is available and functional
+Exit criteria:
+All relevant automated tests pass successfully
+Manual acceptance testing is completed
+All critical and high-severity issues are resolved
+Feature meets the acceptance criteria defined in the issue
+
+Code is approved and merged after PR review
 ### Roles and Responsibilities
 We have a dynamic team structure, which means that each team member has the role and responsibilities of a tester. All developers are expected to:
 - Write and maintain unit and integration tests for their code changes
@@ -44,3 +56,9 @@ We have a dynamic team structure, which means that each team member has the role
 ### Risks and assumptions
 Limited test coverage due to time constraints, potential environment differences between development and production causing unexpected bugs, and the dynamic team structure meaning no dedicated tester. We also assume that all team members have sufficient knowledge to write and maintain tests for their code.
 ### Test deliverables
+Unit test cases and integration test cases
+Automated test results (pass/fail reports)
+Bug reports and issue tickets
+Pull request reviews with testing feedback
+Test-related documentation and updates
+Final confirmation that features meet acceptance criteria
