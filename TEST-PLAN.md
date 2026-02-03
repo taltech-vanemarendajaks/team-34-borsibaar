@@ -28,6 +28,7 @@ For backend APIs. Developers who make changes to the API logic or structure need
 Developers test their bug fixes or new features manually before opening a pull request. The PR reviewer also verifies that all Issue Acceptance Criteria are fulfilled. This level ensures the application meets user requirements and functions as expected from an end-user perspective. 
 
 ### Test scope
+The test scope covers all backend API endpoints and frontend features. Automated unit, integration tests and manual acceptance test is in scope for backend. Manual testing only for frontend, for now. Out of scope: third-party service internals, and deployment/infrastructure.
 ### Test approach
 ### Test environment
 ### Entry and exit criteria
@@ -41,4 +42,5 @@ We have a dynamic team structure, which means that each team member has the role
 
 
 ### Risks and assumptions
+Limited test coverage due to time constraints, potential environment differences between development and production causing unexpected bugs, and the dynamic team structure meaning no dedicated tester. We also assume that all team members have sufficient knowledge to write and maintain tests for their code.
 ### Test deliverables
