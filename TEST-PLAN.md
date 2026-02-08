@@ -43,6 +43,8 @@ Developers test their bug fixes or new features manually before opening a pull r
 - Sales statistics: aggregation per user, per station, revenue calculations
 - Bar station management: CRUD operations, user assignment, ADMIN-only access
 
+Currently automated test coverage (line coverage) is **68%**. See [JaCoCo Coverage Report](https://onedrive.live.com/?qt=allmyphotos&photosData=%2Fshare%2F2F84D485850C457E%21s63f03133d1df418a938c3ea399218bbf%3Fithint%3Dphoto%26e%3DspTHKL%26migratedtospo%3Dtrue&cid=2F84D485850C457E&id=2F84D485850C457E%21s63f03133d1df418a938c3ea399218bbf&redeem=aHR0cHM6Ly8xZHJ2Lm1zL2kvYy8yZjg0ZDQ4NTg1MGM0NTdlL0lRQXpNZkJqMzlHS1FaT01QcU9aSVl1X0FiUktmTjBRQ0Zmbkkxbk1vVXd2TzE4P2U9c3BUSEtM&v=photos) for details.
+
 **In scope — Frontend (manual):**
 - Login page and OAuth2 redirect flow
 - Onboarding flow (organization selection, terms acceptance)
