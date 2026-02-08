@@ -119,7 +119,6 @@ We have a dynamic team structure, which means that each team member has the role
 - No dedicated tester — testing quality depends on each developer's diligence
 - Environment differences between local Docker setup and production server may cause unexpected bugs
 - No automated frontend tests — UI regressions can only be caught manually
-- Shared server (single `ubuntu` user) — deployment issues may be harder to debug
 
 **Assumptions:**
 - All team members have sufficient knowledge to write and maintain backend tests
