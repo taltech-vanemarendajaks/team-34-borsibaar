@@ -25,7 +25,7 @@ For backend services and helper functions. When a developer makes changes to bus
 For backend APIs. Developers who make changes to the API logic or structure need to also update or write new tests for the appropriate controllers. These tests verify that the API endpoints return the correct response structure and status codes.
 
 - **System Testing (Black-box Testing)**
-Testing the fully deployed application end-to-end through the real UI. This verifies that all components (frontend, backend, database, authentication) work together as a complete system. Example scenarios: user logs in via OAuth → completes onboarding → manages inventory → processes a sale at POS → verifies sales statistics. System testing is performed manually before releases or major merges to main.
+Testing the fully deployed application end-to-end through the real UI. This verifies that all components (frontend, backend, database, authentication) work together as a complete system. Example scenarios: user logs in via OAuth → completes onboarding → manages inventory → processes a sale at POS → verifies sales statistics. System testing is performed manually after live deploy in production server.
 
 - **Acceptance (Manual) Testing (Black-box Testing)**
 Developers test their bug fixes or new features manually before opening a pull request. The PR reviewer also verifies that all Issue Acceptance Criteria are fulfilled. This level ensures the application meets user requirements and functions as expected from an end-user perspective.
@@ -54,7 +54,7 @@ Developers test their bug fixes or new features manually before opening a pull r
 **Out of scope:**
 - Third-party service internals (Google OAuth provider, PostgreSQL engine)
 - Deployment infrastructure and server configuration
-- Browser compatibility testing beyond latest Chrome/Firefox
+- Browser compatibility testing beyond latest Chrome/Firefox/Safari
 - Performance and load testing
 
 ### Test approach
@@ -86,8 +86,8 @@ Developers test their bug fixes or new features manually before opening a pull r
 
 - **Local development:** Docker Compose running PostgreSQL 17, Spring Boot backend (port 8080), Next.js frontend (port 3000). Environment variables loaded from `.env` files.
 - **Automated test database:** H2 in-memory database used by backend integration tests (separate from the development PostgreSQL instance, no setup required)
-- **CI pipeline:** GitLab CI runs Maven build and tests on every pull request using Java 21 and Node.js
-- **Production/staging server:** Ubuntu 24.04 at `193.40.157.60` with nginx. Used for system-level testing of the deployed application.
+- **CI pipeline:** Github Actions workflow runs Maven build and tests on every pull request using Java 21 and Node.js
+- **Production server:** Ubuntu 24.04 at `193.40.157.60` with nginx. Used for system-level testing of the deployed application.
 
 ### Entry and exit criteria
 Entry criteria:
