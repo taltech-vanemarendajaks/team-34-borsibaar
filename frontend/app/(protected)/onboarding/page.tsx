@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
-import { backendUrl } from "@/utils/constants";
 
 type Org = { id: number; name: string; createdAt?: string; updatedAt?: string };
 
@@ -18,6 +17,7 @@ export default function OnboardingPage() {
   const [saving, setSaving] = useState(false);
   const [loadingOrgs, setLoadingOrgs] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [canceling, setCanceling] = useState(false);
 
   // Client safety guard: if user already onboarded, redirect away.
   const { data: user } = useSWR(
@@ -88,6 +88,21 @@ export default function OnboardingPage() {
     }
   }
 
+  async function handleCancel() {
+    try {
+      setCanceling(true);
+      await fetch("/api/logout", {
+        method: "POST",
+        credentials: "include",
+      });
+      router.push("/login");
+    } catch (e) {
+      console.error("Logout error:", e);
+      // Even if logout fails, redirect to login
+      router.push("/login");
+    }
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-6">
       <div className="w-full max-w-lg rounded-2xl bg-card text-card-foreground p-6 shadow [color-scheme:light]">
@@ -130,12 +145,13 @@ export default function OnboardingPage() {
         </div>
 
         <div className="mt-6 flex justify-end gap-2">
-          <a
-            className="rounded-lg border border-input px-4 py-2 text-foreground"
-            href={`${backendUrl}/logout`}
+          <button
+            className="rounded-lg border border-input px-4 py-2 text-foreground disabled:opacity-50"
+            disabled={canceling || saving}
+            onClick={handleCancel}
           >
-            Cancel
-          </a>
+            {canceling ? "Canceling…" : "Cancel"}
+          </button>
           <button
             className="rounded-lg bg-primary px-4 py-2 text-primary-foreground disabled:opacity-50"
             disabled={saving || !acceptTerms || organizationId === ""}
