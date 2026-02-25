@@ -2,7 +2,7 @@ name: Build and Deploy
 
 on:
   push:
-    branches: [ main ]
+    branches: [ CI/CD ]
 
 jobs:
   build-and-deploy:
@@ -12,9 +12,13 @@ jobs:
       SSH_USER: ${{ secrets.SSH_USER }}
       SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
       SERVER_IP: ${{ secrets.SERVER_IP }}
-      DEPLOY_PATH: ~/studentbar-pos-deploy
-      ENV_PRODUCTION_FILE: ${{ secrets.ENV_PRODUCTION_FILE }}
-      DOCKER_COMPOSE_FILE: docker-compose.prod.yaml
+      DEPLOY_PATH: ~/borsibaar
+      DOCKER_COMPOSE_FILE: docker-compose.yaml
+      BACKEND_URL: ${{ vars.BACKEND_URL }}
+      IMAGE_TAG: ${{ github.sha }}
+      GH_CLOUD_REGISTRY: ghcr.io/taltech-vanemarendajaks
+      DOCKER_USER: ${{ github.actor }}
+      DOCKER_PW: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout code
@@ -30,56 +34,38 @@ jobs:
         working-directory: backend
         run: ./mvnw clean package -DskipTests
 
-      - name: Set up Node 20
-        uses: actions/setup-node@v4
+      - name: building docker images
+        run: |
+          docker build -f backend/Dockerfile -t $GH_CLOUD_REGISTRY/borsibaar34-back:$IMAGE_TAG .
+          docker build -f frontend/Dockerfile --build-arg NEXT_PUBLIC_BACKEND_URL=$BACKEND_URL -t $GH_CLOUD_REGISTRY/borsibaar34-front:$IMAGE_TAG .
+      
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
         with:
-          node-version: '20'
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Install frontend dependencies
-        working-directory: frontend
-        run: npm ci
-
-      - name: Build frontend
-        working-directory: frontend
-        run: npm run build
-
+      - name: push to registry
+        run: |
+          docker push $GH_CLOUD_REGISTRY/borsibaar34-back:$IMAGE_TAG
+          docker push $GH_CLOUD_REGISTRY/borsibaar34-front:$IMAGE_TAG
+      
       - name: Set up SSH key
         run: |
           mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan "$SERVER_IP" >> ~/.ssh/known_hosts
 
-      - name: Create .env.production from secret
-        run: |
-          printf '%s\n' "$ENV_PRODUCTION_FILE" > .env.production
-
-      - name: Create deployment package
-        run: |
-          tar czf deployment.tar.gz \
-            backend/target/*.jar \
-            frontend/ \
-            nginx/ \
-            "$DOCKER_COMPOSE_FILE" \
-            backend/Dockerfile \
-            frontend/Dockerfile \
-            .env.production
-
-      - name: Install sshpass and openssh-client
+      - name: Install and openssh-client
         run: |
           sudo apt-get update
-          sudo apt-get install -y sshpass openssh-client
-
-      - name: Copy deployment package to server
-        run: |
-          scp -i ~/.ssh/id_rsa \
-            -o StrictHostKeyChecking=yes \
-            deployment.tar.gz \
-            "$SSH_USER@$SERVER_IP:/tmp/"
+          sudo apt-get install -y openssh-client
 
       - name: Deploy on server
         run: |
-          ssh -i ~/.ssh/id_rsa \
+          ssh -i ~/.ssh/id_ed25519 \
             -o StrictHostKeyChecking=yes \
             "$SSH_USER@$SERVER_IP" << EOF
           set -e
@@ -87,36 +73,24 @@ jobs:
           mkdir -p $DEPLOY_PATH
           cd $DEPLOY_PATH
 
-          # Extract deployment package
-          tar xzf /tmp/deployment.tar.gz
-          rm /tmp/deployment.tar.gz
-
           # Check if docker-compose file exists
           if [ ! -f "$DOCKER_COMPOSE_FILE" ]; then
             echo "ERROR: $DOCKER_COMPOSE_FILE not found!"
             exit 1
           fi
 
-          # Copy environment file if exists
-          if [ -f .env.production ]; then
-            cp .env.production .env
-          fi
+          # Update image tag in .env
+          sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=$IMAGE_TAG/" .env
 
-          # Clean/repair builder cache and avoid BuildKit flakiness
-          # sudo systemctl restart docker
-          # docker buildx prune -af || true
-          # docker builder prune -af || true
-          # docker image prune -af || true
-
-          # Stop existing containers
-          docker compose -f "$DOCKER_COMPOSE_FILE" down
+          docker login ghcr.io -u $DOCKER_USER -p $DOCKER_PW
+          docker pull $GH_CLOUD_REGISTRY/borsibaar34-back:$IMAGE_TAG
+          docker pull $GH_CLOUD_REGISTRY/borsibaar34-front:$IMAGE_TAG
 
           # Rebuild and start containers
-          docker compose -f "$DOCKER_COMPOSE_FILE" build --no-cache
-          docker compose -f "$DOCKER_COMPOSE_FILE" up -d
+          docker compose -f "$DOCKER_COMPOSE_FILE" up -d  --remove-orphans
 
           # Clean up old images
-          # docker image prune -f
+          docker image prune -f
 
           echo "Deployment complete!"
           docker compose -f "$DOCKER_COMPOSE_FILE" ps
