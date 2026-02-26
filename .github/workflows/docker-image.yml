@@ -20,7 +20,7 @@ jobs:
       DOCKER_COMPOSE_FILE: docker-compose.yaml
       BACKEND_URL: ${{ vars.BACKEND_URL }}
       IMAGE_TAG: ${{ github.sha }}
-      GH_CLOUD_REGISTRY: ghcr.io/taltech-vanemarendajaks
+      GH_CLOUD_REGISTRY: ghcr.io/${{ github.repository_owner }}
       DOCKER_USER: ${{ github.actor }}
       DOCKER_PW: ${{ secrets.GITHUB_TOKEN }}
 
