@@ -2,7 +2,7 @@ name: Build and Deploy on self hosted
 
 on:
   push:
-    branches: [CI/CD]
+    branches: [main]
 
 jobs:
   build-and-deploy:
@@ -44,14 +44,8 @@ jobs:
         run: |
           set -e
 
-          echo "Current dir: $(pwd)"
-          echo "Deploy path: $DEPLOY_PATH"
-          echo "Home dir: $HOME"
-
           mkdir -p $DEPLOY_PATH
           cd $DEPLOY_PATH
-
-          echo "After cd: $(pwd)"
 
           # Check if docker-compose file exists
           if [ ! -f "$DOCKER_COMPOSE_FILE" ]; then
