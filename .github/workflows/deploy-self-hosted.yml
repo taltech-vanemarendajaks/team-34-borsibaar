@@ -1,27 +1,23 @@
-name: Build and Deploy on github hosted
+name: Build and Deploy on self hosted
 
 on:
-  workflow_dispatch:
+  push:
+    branches: [main]
 
 jobs:
   build-and-deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
 
     permissions:
       contents: read
       packages: write
 
     env:
-      SSH_USER: ${{ secrets.SSH_USER }}
-      SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-      SERVER_IP: ${{ secrets.SERVER_IP }}
-      DEPLOY_PATH: ~/borsibaar
+      DEPLOY_PATH: /home/ubuntu/borsibaar
       DOCKER_COMPOSE_FILE: docker-compose.yaml
       BACKEND_URL: ${{ vars.BACKEND_URL }}
       IMAGE_TAG: ${{ github.sha }}
       GH_CLOUD_REGISTRY: ghcr.io/${{ github.repository_owner }}
-      DOCKER_USER: ${{ github.actor }}
-      DOCKER_PW: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout code
@@ -44,23 +40,8 @@ jobs:
           docker push $GH_CLOUD_REGISTRY/borsibaar34-back:$IMAGE_TAG
           docker push $GH_CLOUD_REGISTRY/borsibaar34-front:$IMAGE_TAG
 
-      - name: Set up SSH key
-        run: |
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-          ssh-keyscan "$SERVER_IP" >> ~/.ssh/known_hosts
-
-      - name: Install and openssh-client
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y openssh-client
-
       - name: Deploy on server
         run: |
-          ssh -i ~/.ssh/id_ed25519 \
-            -o StrictHostKeyChecking=yes \
-            "$SSH_USER@$SERVER_IP" << EOF
           set -e
 
           mkdir -p $DEPLOY_PATH
@@ -75,10 +56,6 @@ jobs:
           # Update image tag in .env
           sed -i "s/^IMAGE_TAG=.*/IMAGE_TAG=$IMAGE_TAG/" .env
 
-          docker login ghcr.io -u $DOCKER_USER -p $DOCKER_PW
-          docker pull $GH_CLOUD_REGISTRY/borsibaar34-back:$IMAGE_TAG
-          docker pull $GH_CLOUD_REGISTRY/borsibaar34-front:$IMAGE_TAG
-
           # Rebuild and start containers
           docker compose -f "$DOCKER_COMPOSE_FILE" up -d  --remove-orphans
 
@@ -87,4 +64,3 @@ jobs:
 
           echo "Deployment complete!"
           docker compose -f "$DOCKER_COMPOSE_FILE" ps
-          EOF

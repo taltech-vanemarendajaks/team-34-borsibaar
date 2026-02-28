@@ -1,8 +1,19 @@
-FROM eclipse-temurin:21-jdk AS build
+# Build stage
+FROM eclipse-temurin:21-jdk AS builder
 WORKDIR /app
 
-# Copy the pre-built JAR from the target directory
-COPY target/*.jar app.jar
+COPY mvnw .
+COPY .mvn .mvn
+COPY pom.xml .
+RUN ./mvnw dependency:go-offline -B
+
+COPY src ./src
+RUN ./mvnw clean package -DskipTests
+
+# Run stage
+FROM eclipse-temurin:21-jre
+WORKDIR /app
+COPY --from=builder /app/target/*.jar app.jar
 
 ENTRYPOINT ["java", "-jar", "app.jar"]
 
