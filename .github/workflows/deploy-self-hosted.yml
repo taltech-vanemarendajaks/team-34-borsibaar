@@ -13,7 +13,7 @@ jobs:
       packages: write
 
     env:
-      DEPLOY_PATH: ~/borsibaar
+      DEPLOY_PATH: /home/ubuntu/borsibaar
       DOCKER_COMPOSE_FILE: docker-compose.yaml
       BACKEND_URL: ${{ vars.BACKEND_URL }}
       IMAGE_TAG: ${{ github.sha }}
@@ -44,8 +44,14 @@ jobs:
         run: |
           set -e
 
+          echo "Current dir: $(pwd)"
+          echo "Deploy path: $DEPLOY_PATH"
+          echo "Home dir: $HOME"
+
           mkdir -p $DEPLOY_PATH
           cd $DEPLOY_PATH
+
+          echo "After cd: $(pwd)"
 
           # Check if docker-compose file exists
           if [ ! -f "$DOCKER_COMPOSE_FILE" ]; then
